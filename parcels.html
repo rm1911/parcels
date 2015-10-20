@@ -1,0 +1,245 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>parcels package &mdash; parcels  documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="parcels  documentation" href="index.html" />
+    <link rel="prev" title="Welcome to parcels’s documentation!" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="parcels-package">
+<h1>parcels package<a class="headerlink" href="#parcels-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-parcels.nemo_grid">
+<span id="parcels-nemo-grid-module"></span><h2>parcels.nemo_grid module<a class="headerlink" href="#module-parcels.nemo_grid" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="parcels.nemo_grid.NEMOGrid">
+<em class="property">class </em><code class="descclassname">parcels.nemo_grid.</code><code class="descname">NEMOGrid</code><span class="sig-paren">(</span><em>filename=None</em>, <em>degree=3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parcels/nemo_grid.html#NEMOGrid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Grid class used to generate and read NEMO output files</p>
+<dl class="attribute">
+<dt id="parcels.nemo_grid.NEMOGrid.U">
+<code class="descname">U</code><em class="property"> = None</em><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.U" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.nemo_grid.NEMOGrid.V">
+<code class="descname">V</code><em class="property"> = None</em><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.V" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="parcels.nemo_grid.NEMOGrid.add_particle">
+<code class="descname">add_particle</code><span class="sig-paren">(</span><em>p</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parcels/nemo_grid.html#NEMOGrid.add_particle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.add_particle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.nemo_grid.NEMOGrid.depth">
+<code class="descname">depth</code><em class="property"> = None</em><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.depth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="parcels.nemo_grid.NEMOGrid.eval">
+<code class="descname">eval</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parcels/nemo_grid.html#NEMOGrid.eval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.eval" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.nemo_grid.NEMOGrid.lat_u">
+<code class="descname">lat_u</code><em class="property"> = None</em><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.lat_u" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.nemo_grid.NEMOGrid.lat_v">
+<code class="descname">lat_v</code><em class="property"> = None</em><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.lat_v" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.nemo_grid.NEMOGrid.lon_u">
+<code class="descname">lon_u</code><em class="property"> = None</em><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.lon_u" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.nemo_grid.NEMOGrid.lon_v">
+<code class="descname">lon_v</code><em class="property"> = None</em><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.lon_v" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.nemo_grid.NEMOGrid.time_counter">
+<code class="descname">time_counter</code><em class="property"> = None</em><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.time_counter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="parcels.nemo_grid.NEMOGrid.write">
+<code class="descname">write</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/parcels/nemo_grid.html#NEMOGrid.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.write" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write flow field to NetCDF file using NEMO convention</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.nemo_grid.NEMOGrid.x">
+<code class="descname">x</code><em class="property"> = 0</em><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.x" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.nemo_grid.NEMOGrid.y">
+<code class="descname">y</code><em class="property"> = 0</em><a class="headerlink" href="#parcels.nemo_grid.NEMOGrid.y" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="parcels-particle-module">
+<h2>parcels.particle module<a class="headerlink" href="#parcels-particle-module" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-parcels.particle"></span><dl class="class">
+<dt id="parcels.particle.Particle">
+<em class="property">class </em><code class="descclassname">parcels.particle.</code><code class="descname">Particle</code><a class="headerlink" href="#parcels.particle.Particle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Classe encapsualting the basic attributes of a particle</p>
+<dl class="method">
+<dt id="parcels.particle.Particle.advect_rk4">
+<code class="descname">advect_rk4</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parcels.particle.Particle.advect_rk4" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.particle.Particle.lat">
+<code class="descname">lat</code><a class="headerlink" href="#parcels.particle.Particle.lat" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="parcels.particle.Particle.lon">
+<code class="descname">lon</code><a class="headerlink" href="#parcels.particle.Particle.lon" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="parcels.particle.ParticleSet">
+<em class="property">class </em><code class="descclassname">parcels.particle.</code><code class="descname">ParticleSet</code><a class="headerlink" href="#parcels.particle.ParticleSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Container class for storing and executing over sets of particles.</p>
+<p>Please note that this currently only supports fixed size partcile sets.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>size</strong> &#8211; Initial size of particle set</li>
+<li><strong>grid</strong> &#8211; Grid object from which to sample velocity</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="parcels.particle.ParticleSet.add_particle">
+<code class="descname">add_particle</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parcels.particle.ParticleSet.add_particle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="parcels.particle.ParticleSet.advect">
+<code class="descname">advect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parcels.particle.ParticleSet.advect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-parcels">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-parcels" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">parcels package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-parcels.nemo_grid">parcels.nemo_grid module</a></li>
+<li><a class="reference internal" href="#parcels-particle-module">parcels.particle module</a></li>
+<li><a class="reference internal" href="#module-parcels">Module contents</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to parcels&#8217;s documentation!</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/parcels.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2015, M. Lange, E. van Sebille.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.6</a>
+      
+      |
+      <a href="_sources/parcels.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
