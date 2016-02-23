@@ -136,16 +136,6 @@ class ParticleSet(object):
         self.ptype = ParticleType(pclass)
         self.kernel = None
 
-        if self.ptype.uses_jit:
-            # Allocate underlying data for C-allocated particles
-            self._particle_data = np.empty(size, dtype=self.ptype.dtype)
-
-            def cptr(i):
-                return self._particle_data[i]
-        else:
-            def cptr(i):
-                return None
-
         if start is not None and finish is not None:
             # Initialise from start/finish coordinates with equidistant spacing
             assert(lon is None and lat is None)
@@ -156,8 +146,14 @@ class ParticleSet(object):
             # Initialise from lists of lon/lat coordinates
             assert(size == len(lon) and size == len(lat))
 
-            for i in range(size):
-                self.particles[i] = pclass(lon[i], lat[i], grid=grid, cptr=cptr(i))
+            if self.ptype.uses_jit:
+                # Allocate underlying data for C-allocated particles
+                self._particle_data = np.empty(size, dtype=self.ptype.dtype)
+                for i, cptr in enumerate(self._particle_data):
+                    self.particles[i] = pclass(lon[i], lat[i], grid=grid, cptr=cptr)
+            else:
+                for i in range(size):
+                    self.particles[i] = pclass(lon[i], lat[i], grid=grid)
         else:
             raise ValueError("Latitude and longitude required for generating ParticleSet")
 
