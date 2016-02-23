@@ -373,8 +373,7 @@ class LoopGenerator(object):
         ccode += [str(c.Include("math.h", system=False))]
 
         # Generate type definition for particle type
-        vdecl = [c.POD(dtype, var) for var, dtype in self.ptype.var_types.items()]
-        ccode += [str(c.Typedef(c.GenerableStruct("", vdecl, declname=self.ptype.name)))]
+        ccode += [str(self.ptype.ccode_struct)]
 
         # Insert kernel code
         ccode += [str(kernel_ast)]

@@ -4,6 +4,7 @@ import numpy as np
 import netCDF4
 from collections import OrderedDict
 import math
+import cgen as c
 
 __all__ = ['Particle', 'ParticleSet', 'JITParticle',
            'ParticleFile', 'AdvectionRK4', 'AdvectionEE']
@@ -114,6 +115,11 @@ class ParticleType(object):
     def dtype(self):
         """Numpy.dtype object that defines the C struct"""
         return np.dtype(list(self.var_types.items()))
+
+    @property
+    def ccode_struct(self):
+        vdecl = [c.POD(dtype, var) for var, dtype in self.var_types.items()]
+        return c.GenerableStruct(self.name, vdecl)
 
 
 class ParticleSet(object):
