@@ -1,5 +1,4 @@
 from parcels.kernel import Kernel
-from parcels.compiler import GNUCompiler
 import numpy as np
 import netCDF4
 from collections import OrderedDict
@@ -204,7 +203,7 @@ class ParticleSet(object):
                 self.kernel = self.Kernel(pyfunc)
             # Prepare JIT kernel execution
             if self.ptype.uses_jit:
-                self.kernel.compile(compiler=GNUCompiler())
+                self.kernel.compile()
                 self.kernel.load_lib()
 
         # Check if output is required and compute outer leaps

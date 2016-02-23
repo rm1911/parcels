@@ -1,4 +1,5 @@
 from parcels.codegenerator import KernelGenerator, LoopGenerator
+from parcels.compiler import get_compiler
 from py import path
 import math  # NOQA get flake8 to ignore unused import.
 import numpy.ctypeslib as npct
@@ -6,6 +7,7 @@ from ctypes import c_int, c_float, c_double, c_void_p, byref
 from ast import parse, FunctionDef, Module
 import inspect
 from copy import deepcopy
+import codepy.jit as jit
 
 
 class Kernel(object):
@@ -62,11 +64,10 @@ class Kernel(object):
                                           self.field_args,
                                           kernel_ccode)
 
-    def compile(self, compiler):
+    def compile(self):
         """ Writes kernel code to file and compiles it."""
-        with open(self.src_file, 'w') as f:
-            f.write(self.ccode)
-        compiler.compile(self.src_file, self.lib_file, self.log_file)
+        jit.extension_file_from_string(get_compiler(), self.lib_file,
+                                       self.ccode, source_name=self.src_file)
 
     def load_lib(self):
         self._lib = npct.load_library(self.lib_file, '.')

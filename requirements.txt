@@ -7,4 +7,5 @@ cachetools>=1.0.0
 xray>=0.5.1
 pytest>=2.7.0
 pymbolic
+codepy
 cgen
