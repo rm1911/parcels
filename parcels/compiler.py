@@ -18,7 +18,7 @@ class Compiler(object):
     :arg ldargs: A list of arguments to the linker (optional)."""
 
     def __init__(self, cc, ld=None, cppargs=[], ldargs=[]):
-        self._cc = os.environ.get('CC', cc)
+        self._cc = os.environ.get('CXX', cc)
         self._ld = os.environ.get('LDSHARED', ld)
         self._cppargs = cppargs
         self._ldargs = ldargs
@@ -52,4 +52,4 @@ class GNUCompiler(Compiler):
         opt_flags = ['-g', '-O3']
         cppargs = ['-Wall', '-fPIC', '-I%s/include' % get_package_dir()] + opt_flags + cppargs
         ldargs = ['-shared'] + ldargs
-        super(GNUCompiler, self).__init__("gcc", cppargs=cppargs, ldargs=ldargs)
+        super(GNUCompiler, self).__init__("g++", cppargs=cppargs, ldargs=ldargs)

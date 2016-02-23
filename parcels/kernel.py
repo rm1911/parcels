@@ -46,7 +46,7 @@ class Kernel(object):
 
         self.name = "%s%s" % (ptype.name, funcname)
 
-        self.src_file = str(path.local("%s.c" % self.name))
+        self.src_file = str(path.local("%s.cpp" % self.name))
         self.lib_file = str(path.local("%s.so" % self.name))
         self.log_file = str(path.local("%s.log" % self.name))
         self._lib = None

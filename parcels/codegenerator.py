@@ -393,6 +393,6 @@ class LoopGenerator(object):
         tloop = c.For("t = 0", "t < timesteps", "++t",
                       c.Block([ploop, c.Statement("time += (double)dt")]))
         fbody = c.Block([c.Value("int", "p, t"), tloop])
-        fdecl = c.FunctionDeclaration(c.Value("void", "particle_loop"), args)
+        fdecl = c.FunctionDeclaration(c.Extern("C", c.Value("void", "particle_loop")), args)
         ccode += [str(c.FunctionBody(fdecl, fbody))]
         return "\n\n".join(ccode)
