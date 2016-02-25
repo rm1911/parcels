@@ -1,9 +1,12 @@
 from parcels.kernel import Kernel
+from parcels.compiler import get_compiler
 import numpy as np
 import netCDF4
 from collections import OrderedDict
 import math
 import cgen as c
+from py import path
+from codepy.bpl import BoostPythonModule
 
 __all__ = ['Particle', 'ParticleSet', 'JITParticle',
            'ParticleFile', 'AdvectionRK4', 'AdvectionEE']
@@ -78,13 +81,15 @@ class JITParticle(Particle):
         if attr == "_cptr":
             return super(JITParticle, self).__getattr__(attr)
         else:
-            return self._cptr.__getitem__(attr)
+            return getattr(self._cptr, attr)
 
     def __setattr__(self, key, value):
         if key == "_cptr":
             super(JITParticle, self).__setattr__(key, value)
         else:
-            self._cptr.__setitem__(key, value)
+            if hasattr(value, 'dtype'):
+                value = value.item()  # De-numpify
+            setattr(self._cptr, key, value)
 
 
 class ParticleType(object):
@@ -107,6 +112,15 @@ class ParticleType(object):
 
         self.user_vars = pclass.user_vars
 
+        if self.uses_jit:
+            # JIT files for data container management
+            self.src_file = str(path.local("%s.cpp" % self.name))
+            self.lib_file = str(path.local("%s.so" % self.name))
+            self.log_file = str(path.local("%s.log" % self.name))
+
+            # Create a Boost.Python module via codepy
+            self.bpl = BoostPythonModule()
+
     def __repr__(self):
         return self.name
 
@@ -115,14 +129,30 @@ class ParticleType(object):
         """Numpy.dtype object that defines the C struct"""
         return np.dtype(list(self.var_types.items()))
 
+    def compile(self):
+        """Adds basic data management facilities to the BPL and
+        compiles the module"""
+        self.bpl.add_to_preamble([c.Include("vector", system=True)])
+        self.bpl.add_struct(self.ccode_struct, py_name=self.name)
+        self.bpl.add_to_init(self.ccode_vector)
+        self.bpl.expose_vector_type("vec_%s" % self.name, py_name="vec_%s" % self.name)
+
+        self.mod = self.bpl.compile(get_compiler(), source_name=self.src_file)
+        self.obj = getattr(self.mod, self.name)
+        self.vec = getattr(self.mod, "vec_%s" % self.name)
+
     @property
     def ccode_struct(self):
         vdecl = [c.POD(dtype, var) for var, dtype in self.var_types.items()]
-        return c.GenerableStruct("", vdecl, declname=self.name)
+        return c.GenerableStruct(self.name, vdecl)
 
     @property
     def ccode_typedef(self):
         return c.Typedef(self.ccode_struct)
+
+    @property
+    def ccode_vector(self):
+        return [c.Typedef(c.Value("std::vector<%s>" % self.name, "vec_%s" % self.name))]
 
 
 class ParticleSet(object):
@@ -156,10 +186,16 @@ class ParticleSet(object):
             assert(size == len(lon) and size == len(lat))
 
             if self.ptype.uses_jit:
+                # Compile and load data container functions from ParticleType
+                self.ptype.compile()
+
                 # Allocate underlying data for C-allocated particles
-                self._particle_data = np.empty(size, dtype=self.ptype.dtype)
-                for i, cptr in enumerate(self._particle_data):
-                    self.particles[i] = pclass(lon[i], lat[i], grid=grid, cptr=cptr)
+                self._particle_data = self.ptype.vec()
+                for i in range(size):
+                    cobj = self.ptype.obj()
+                    self._particle_data.append(cobj)
+                    self.particles[i] = pclass(lon[i], lat[i], grid=grid, cptr=cobj)
+
             else:
                 for i in range(size):
                     self.particles[i] = pclass(lon[i], lat[i], grid=grid)
