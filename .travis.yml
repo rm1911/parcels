@@ -14,6 +14,8 @@ addons:
       - libhdf5-serial-dev
       - netcdf-bin
       - libnetcdf-dev
+      - libboost-dev
+      - libboost-python-dev
 
 before_install:
     # Setup anaconda
