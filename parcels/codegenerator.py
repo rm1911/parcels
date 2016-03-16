@@ -379,19 +379,20 @@ class LoopGenerator(object):
         ccode += [str(kernel_ast)]
 
         # Generate outer loop for repeated kernel invocation
-        args = [c.Value("int", "num_particles"),
-                c.Pointer(c.Value(self.ptype.name, "particles")),
+        args = [c.Value("std::vector<%s> *" % self.ptype.name, "vec"),
                 c.Value("int", "timesteps"), c.Value("double", "time"),
                 c.Value("float", "dt")]
         for field, _ in field_args.items():
             args += [c.Pointer(c.Value("CField", "%s" % field))]
         fargs_str = ", ".join(['time', 'dt'] + list(field_args.keys()))
-        loop_body = [c.Statement("%s(&(particles[p]), %s)" %
-                                 (funcname, fargs_str))]
-        ploop = c.For("p = 0", "p < num_particles", "++p", c.Block(loop_body))
+        loop_body = [c.Statement("%s(&(*particle), %s)" % (funcname, fargs_str))]
+        ploop = c.For("particle = vec->begin()", "particle != vec->end()",
+                      "++particle", c.Block(loop_body))
         tloop = c.For("t = 0", "t < timesteps", "++t",
                       c.Block([ploop, c.Statement("time += (double)dt")]))
-        fbody = c.Block([c.Value("int", "p, t"), tloop])
+        fbody = [c.Value("int", "t")]
+        fbody += [c.Value("std::vector<%s>::iterator" % self.ptype.name, "particle")]
+        fbody += [tloop]
         fdecl = c.FunctionDeclaration(c.Extern("C", c.Value("void", "particle_loop")), args)
-        ccode += [str(c.FunctionBody(fdecl, fbody))]
+        ccode += [str(c.FunctionBody(fdecl, c.Block(fbody)))]
         return "\n\n".join(ccode)

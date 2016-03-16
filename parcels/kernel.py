@@ -2,7 +2,7 @@ from parcels.codegenerator import KernelGenerator, LoopGenerator
 from py import path
 import math  # NOQA get flake8 to ignore unused import.
 import numpy.ctypeslib as npct
-from ctypes import c_int, c_float, c_double, c_void_p, byref
+from ctypes import c_int, c_float, c_double, byref
 from ast import parse, FunctionDef, Module
 import inspect
 from copy import deepcopy
@@ -75,8 +75,7 @@ class Kernel(object):
     def execute(self, pset, timesteps, time, dt):
         if self.ptype.uses_jit:
             fargs = [byref(f.ctypes_struct) for f in self.field_args.values()]
-            particle_data = pset._particle_data.ctypes.data_as(c_void_p)
-            self._function(c_int(len(pset)), particle_data, c_int(timesteps),
+            self._function(pset._particle_data, c_int(timesteps),
                            c_double(time), c_float(dt), *fargs)
         else:
             for _ in range(timesteps):
