@@ -5,9 +5,15 @@ import netCDF4
 from collections import OrderedDict
 import math
 import cgen as c
+from py import path
+import numpy.ctypeslib as npct
+from ctypes import c_int, c_float, c_void_p, Structure, POINTER
 
 __all__ = ['Particle', 'ParticleSet', 'JITParticle',
            'ParticleFile', 'AdvectionRK4', 'AdvectionEE']
+
+
+dtype2ctype = {np.int32: c_int, np.float32: c_float}
 
 
 def AdvectionRK4(particle, grid, time, dt):
@@ -79,13 +85,13 @@ class JITParticle(Particle):
         if attr == "_cptr":
             return super(JITParticle, self).__getattr__(attr)
         else:
-            return self._cptr.__getitem__(attr)
+            return getattr(self._cptr, attr)
 
     def __setattr__(self, key, value):
         if key == "_cptr":
             super(JITParticle, self).__setattr__(key, value)
         else:
-            self._cptr.__setitem__(key, value)
+            setattr(self._cptr, key, value)
 
 
 class ParticleType(object):
@@ -108,6 +114,12 @@ class ParticleType(object):
 
         self.user_vars = pclass.user_vars
 
+        if self.uses_jit:
+            # JIT files for data container management
+            self.src_file = str(path.local("%s.cpp" % self.name))
+            self.lib_file = str(path.local("%s.so" % self.name))
+            self.log_file = str(path.local("%s.log" % self.name))
+
     def __repr__(self):
         return self.name
 
@@ -116,10 +128,60 @@ class ParticleType(object):
         """Numpy.dtype object that defines the C struct"""
         return np.dtype(list(self.var_types.items()))
 
+    def compile(self, compiler):
+        """Adds basic data management facilities to the BPL and
+        compiles the module"""
+        with open(self.src_file, 'w') as f:
+            f.write(self.ccode)
+        compiler.compile(self.src_file, self.lib_file, self.log_file)
+        self._lib = npct.load_library(self.lib_file, '.')
+
+    @property
+    def ccode(self):
+        ccode = [str(c.Include("parcels.h", system=False))]
+        ccode += [str(self.ccode_struct)]
+        ccode += [str(self.ccode_vec_init)]
+        ccode += [str(self.ccode_vec_get)]
+        return "\n\n".join(ccode)
+
     @property
     def ccode_struct(self):
         vdecl = [c.POD(dtype, var) for var, dtype in self.var_types.items()]
         return c.GenerableStruct(self.name, vdecl)
+
+    @property
+    def ctypes_struct(self):
+        ftypes = [(n, dtype2ctype[t]) for n, t in self.var_types.items()]
+        return type(self.name, (Structure,), {'_fields_': ftypes})
+
+    @property
+    def ccode_vec_init(self):
+        return c.FunctionBody(
+            c.FunctionDeclaration(c.Extern("C", c.Value("void *", "vec_init")),
+                                  [c.Value("int", "n")]),
+            c.Block([c.Statement("return new std::vector<%s>(n)" % self.name)])
+        )
+
+    def vec_init(self, n):
+        func = self._lib.vec_init
+        func.argtypes = [c_int]
+        func.restype = c_void_p
+        return func(n)
+
+    @property
+    def ccode_vec_get(self):
+        return c.FunctionBody(
+            c.FunctionDeclaration(c.Extern("C", c.Value("%s *" % self.name, "vec_get")),
+                                  [c.Value("std::vector<%s> *" % self.name, "vec"),
+                                   c.Value("int", "n")]),
+            c.Block([c.Statement("return &((*vec)[n])")])
+        )
+
+    def vec_get(self, vec, n):
+        func = self._lib.vec_get
+        func.argtypes = [c_void_p, c_int]
+        func.restype = POINTER(self.ctypes_struct)
+        return func(vec, n).contents
 
 
 class ParticleSet(object):
@@ -153,9 +215,13 @@ class ParticleSet(object):
             assert(size == len(lon) and size == len(lat))
 
             if self.ptype.uses_jit:
+                # Compile and load data container functions from ParticleType
+                self.ptype.compile(compiler=GNUCompiler())
+
                 # Allocate underlying data for C-allocated particles
-                self._particle_data = np.empty(size, dtype=self.ptype.dtype)
-                for i, cptr in enumerate(self._particle_data):
+                self._particle_data = self.ptype.vec_init(size)
+                for i in range(size):
+                    cptr = self.ptype.vec_get(self._particle_data, i)
                     self.particles[i] = pclass(lon[i], lat[i], grid=grid, cptr=cptr)
             else:
                 for i in range(size):
