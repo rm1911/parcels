@@ -210,6 +210,7 @@ class ParticleSet(object):
         for _ in range(timeleaps):
             self.kernel.execute(self, output_steps, current, dt)
             current += output_steps * dt
+            self.check_withinbounds(current)
             if output_file:
                 output_file.write(self, current)
 
@@ -224,6 +225,15 @@ class ParticleSet(object):
         else:
             field.show(**kwargs)
 
+    def check_withinbounds(self,current):
+        eastb = [p.lon for p in self] > min(self.grid.U.lon[-1] self.grid.V.lon[-1])
+        westb = [p.lon for p in self] < max(self.grid.U.lon[0] self.grid.V.lon[0])
+        northb = [p.lat for p in self] > min(self.grid.U.lat[-1] self.grid.V.lat[-1])
+        southb = [p.lat for p in self] < max(self.grid.U.lat[0] self.grid.V.lat[0])
+        if any(eastb + westb + northb + southb):
+            print 'Execution stopped because at least one particle out of bound at time', current, 'seconds'
+            quit()
+    
     def Kernel(self, pyfunc):
         return Kernel(self.grid, self.ptype, pyfunc)
 
