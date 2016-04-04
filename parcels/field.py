@@ -43,41 +43,45 @@ class Field(object):
         self.data = self.data.reshape((self.time.size, self.lat.size, self.lon.size))
 
 
-        # Building here
-        if name=='U':
-            print 'U: ', self.lon
-#            import matplotlib.pyplot as plt
-            b = [1, 0]
-            self.data = np.array(self.data)
-#            plt.spy(np.squeeze(self.data))
-#            plt.show()
-            self.data[0,:,:] = sig.convolve2d(np.squeeze(self.data), [b], 'same')
-            self.data[0,:,:] = sig.convolve2d(np.squeeze(self.data)[:,::-1], [b], 'same')[:,::-1]
-#            plt.spy(np.squeeze(self.data))
-#            plt.show()
-#            self.show()
-        if name=='V':
-            print 'V: ', self.lon
-#            import matplotlib.pyplot as plt
-            b = [[1],[0]]
-            self.data = np.array(self.data)
-#            plt.figure()
-#            plt.spy(np.squeeze(self.data))
-            self.data[0,:,:] = sig.convolve2d(np.squeeze(self.data), b, 'same')
-            self.data[0,:,:] = sig.convolve2d(np.squeeze(self.data)[::-1,:], b, 'same')[::-1,:]
-#            plt.figure()
-#            plt.spy(np.squeeze(self.data))
-#            plt.show()
-#            self.show()
-
-
-        # Hack around the fact that NaN and ridiculously large values
-        # propagate in SciPy's interpolators
-        if vmin is not None:
-            self.data[self.data < vmin] = 0.
-        if vmax is not None:
-            self.data[self.data > vmax] = 0.
-        self.data[np.isnan(self.data)] = 0.
+#        # Building here
+#        if self.name=='U':
+##            print 'U: ', self.lon
+##            import matplotlib.pyplot as plt
+##            plt.spy(np.squeeze(self.data))
+##            plt.show()
+#            # Mask western edge to set no-normal flow
+#            b = [1, 0]
+#            self.data = np.array(self.data)
+#            self.data[0,:,:] = sig.convolve2d(np.squeeze(self.data), [b], 'same')
+#            # If land is to the north of sea, set land value to sea value
+#            self.data[0,:-1,:][np.isnan(self.data)[0,:-1,:]] = self.data[0,1:,:][np.isnan(self.data)[0,:-1,:]]
+##            plt.spy(np.squeeze(self.data))
+##            plt.show()
+##            self.show()
+#        if self.name=='V':
+##            print 'V: ', self.lon
+##            import matplotlib.pyplot as plt
+#            # Mask southern edge to set no-normal flow
+#            b = [[1],[0]]
+#            self.data = np.array(self.data)
+##            plt.figure()
+##            plt.spy(np.squeeze(self.data))
+#            self.data[0,:,:] = sig.convolve2d(np.squeeze(self.data)[::-1,:], b, 'same')[::-1,:]
+#            # If land is to the east of sea, set land value to sea value
+#            self.data[0,:,1:][np.isnan(self.data)[0,:,1:]] = self.data[0,:,:-1][np.isnan(self.data)[0,:,1:]]
+##            plt.figure()
+##            plt.spy(np.squeeze(self.data))
+##            plt.show()
+##            self.show()
+#
+#
+#        # Hack around the fact that NaN and ridiculously large values
+#        # propagate in SciPy's interpolators
+#        if vmin is not None:
+#            self.data[self.data < vmin] = 0.
+#        if vmax is not None:
+#            self.data[self.data > vmax] = 0.
+#        self.data[np.isnan(self.data)] = 0.
 
         # Variable names in JIT code
         self.ccode_data = self.name
@@ -125,13 +129,56 @@ class Field(object):
     def bilinear(self, t_idx, x, y):
         xi = np.where(x >= self.lon)[0][-1]
         yi = np.where(y >= self.lat)[0][-1]
+
+        #if statements
+        if self.name == 'U':
+            if np.isnan(self.data[t_idx, yi, xi-1]):
+                sw = nw = 0
+            elif np.isnan(self.data[t_idx, yi+1, xi]):
+                sw = nw = self.data[t_idx, yi, xi]
+            else:
+                sw = self.data[t_idx, yi, xi]
+                nw = self.data[t_idx, yi+1, xi]
+            if np.isnan(self.data[t_idx, yi, xi+1]):
+                se = ne = 0
+            elif np.isnan(self.data[t_idx, yi+1, xi+1]):
+                se = ne = self.data[t_idx, yi, xi+1]
+            else:
+                se = self.data[t_idx, yi, xi+1]
+                ne = self.data[t_idx, yi+1, xi+1]
+        elif self.name == 'V':
+            if np.isnan(self.data[t_idx, yi-1, xi]):
+                sw = se = 0
+            elif np.isnan(self.data[t_idx, yi, xi+1]):
+                sw = se = self.data[t_idx, yi, xi]
+            else:
+                sw = self.data[t_idx, yi, xi]
+                se = self.data[t_idx, yi, xi+1]
+            if np.isnan(self.data[t_idx, yi+1, xi]):
+                nw = ne = 0
+            elif np.isnan(self.data[t_idx, yi+1, xi+1]):
+                nw = ne = self.data[t_idx, yi+1, xi]
+            else:
+                nw = self.data[t_idx, yi+1, xi]
+                ne = self.data[t_idx, yi+1, xi+1]
+        else:   # What do?
+            sw = self.data[t_idx, yi, xi]
+            nw = self.data[t_idx, yi+1, xi] if not np.isnan(self.data[t_idx, yi+1, xi]) else 0
+            se = self.data[t_idx, yi, xi+1] if not np.isnan(self.data[t_idx, yi, xi+1]) else 0
+            ne = self.data[t_idx, yi+1, xi+1] if not np.isnan(self.data[t_idx, yi+1, xi+1]) else 0
+
         if not (self.lon[xi] <= x <= self.lon[xi+1] and self.lat[yi] <= y <= self.lat[yi+1]):
             print 'error'
-        return (self.data[t_idx, yi, xi] * (self.lon[xi+1] - x) * (self.lat[yi+1] - y) +\
-            self.data[t_idx, yi, xi+1] * (x - self.lon[xi]) * (self.lat[yi+1] - y) +\
-            self.data[t_idx, yi+1, xi] * (self.lon[xi+1] - x) * (y - self.lat[yi]) +\
-            self.data[t_idx, yi+1, xi+1] * (x - self.lon[xi]) * (y - self.lat[yi])) /\
+        return (sw * (self.lon[xi+1] - x) * (self.lat[yi+1] - y) +\
+            se * (x - self.lon[xi]) * (self.lat[yi+1] - y) +\
+            nw * (self.lon[xi+1] - x) * (y - self.lat[yi]) +\
+            ne * (x - self.lon[xi]) * (y - self.lat[yi])) /\
             ((self.lon[xi+1] - self.lon[xi]) * (self.lat[yi+1] - self.lat[yi]))
+#        return (self.data[t_idx, yi, xi] * (self.lon[xi+1] - x) * (self.lat[yi+1] - y) +\
+#            self.data[t_idx, yi, xi+1] * (x - self.lon[xi]) * (self.lat[yi+1] - y) +\
+#            self.data[t_idx, yi+1, xi] * (self.lon[xi+1] - x) * (y - self.lat[yi]) +\
+#            self.data[t_idx, yi+1, xi+1] * (x - self.lon[xi]) * (y - self.lat[yi])) /\
+#            ((self.lon[xi+1] - self.lon[xi]) * (self.lat[yi+1] - self.lat[yi]))
 
     @cachedmethod(operator.attrgetter('interpolator_cache'))
     def interpolator2D(self, t_idx):
