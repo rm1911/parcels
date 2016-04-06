@@ -7,6 +7,7 @@ from xray import DataArray, Dataset
 import operator
 import matplotlib.pyplot as plt
 from ctypes import Structure, c_int, c_float, c_double, POINTER
+import scipy.signal as sig
 
 
 __all__ = ['Field']
@@ -40,6 +41,35 @@ class Field(object):
             # C-contiguous memory layout for JIT mode.
             self.data = np.transpose(self.data).copy()
         self.data = self.data.reshape((self.time.size, self.lat.size, self.lon.size))
+
+
+        # Building here
+        if name=='U':
+            print 'U: ', self.lon
+#            import matplotlib.pyplot as plt
+            b = [1, 0]
+            self.data = np.array(self.data)
+#            plt.spy(np.squeeze(self.data))
+#            plt.show()
+            self.data[0,:,:] = sig.convolve2d(np.squeeze(self.data), [b], 'same')
+            self.data[0,:,:] = sig.convolve2d(np.squeeze(self.data)[:,::-1], [b], 'same')[:,::-1]
+#            plt.spy(np.squeeze(self.data))
+#            plt.show()
+#            self.show()
+        if name=='V':
+            print 'V: ', self.lon
+#            import matplotlib.pyplot as plt
+            b = [[1],[0]]
+            self.data = np.array(self.data)
+#            plt.figure()
+#            plt.spy(np.squeeze(self.data))
+            self.data[0,:,:] = sig.convolve2d(np.squeeze(self.data), b, 'same')
+            self.data[0,:,:] = sig.convolve2d(np.squeeze(self.data)[::-1,:], b, 'same')[::-1,:]
+#            plt.figure()
+#            plt.spy(np.squeeze(self.data))
+#            plt.show()
+#            self.show()
+
 
         # Hack around the fact that NaN and ridiculously large values
         # propagate in SciPy's interpolators
@@ -136,6 +166,7 @@ class Field(object):
         idx = self.time_index(time)
         if idx > 0:
             return self.interpolator1D(idx, time, y, x)
+            return f0 + (f1 - f0) * ((time - t0) / (t1 - t0))
         else:
 #            print self.bilinear(idx, x, y)
 #            print self.interpolator2D(idx).ev(y, x)
