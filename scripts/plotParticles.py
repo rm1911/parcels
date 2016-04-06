@@ -21,8 +21,10 @@ def particleplotting(filename, tracerfile, recordedvar, mode):
       tfile = Dataset(tracerfile,'r')
       X = tfile.variables['x']
       Y = tfile.variables['y']
-#      P = tfile.variables['vomecrty']
-      P = tfile.variables['vozocrtx']
+      try:
+          P = tfile.variables['vomecrty']
+      except KeyError:
+          P = tfile.variables['vozocrtx']
       plt.contourf(np.squeeze(X),np.squeeze(Y),np.squeeze(P))
 
     if mode == '3d':
