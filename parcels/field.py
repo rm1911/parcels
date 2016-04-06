@@ -92,6 +92,18 @@ class Field(object):
         return self.eval(*key)
 
     @cachedmethod(operator.attrgetter('interpolator_cache'))
+    def bilinear(self, t_idx, x, y):
+        xi = np.where(x >= self.lon)[0][-1]
+        yi = np.where(y >= self.lat)[0][-1]
+        if not (self.lon[xi] <= x <= self.lon[xi+1] and self.lat[yi] <= y <= self.lat[yi+1]):
+            print 'error'
+        return (self.data[t_idx, yi, xi] * (self.lon[xi+1] - x) * (self.lat[yi+1] - y) +\
+            self.data[t_idx, yi, xi+1] * (x - self.lon[xi]) * (self.lat[yi+1] - y) +\
+            self.data[t_idx, yi+1, xi] * (self.lon[xi+1] - x) * (y - self.lat[yi]) +\
+            self.data[t_idx, yi+1, xi+1] * (x - self.lon[xi]) * (y - self.lat[yi])) /\
+            ((self.lon[xi+1] - self.lon[xi]) * (self.lat[yi+1] - self.lat[yi]))
+
+    @cachedmethod(operator.attrgetter('interpolator_cache'))
     def interpolator2D(self, t_idx):
         return RectBivariateSpline(self.lat, self.lon,
                                    self.data[t_idx, :])
@@ -125,7 +137,10 @@ class Field(object):
         if idx > 0:
             return self.interpolator1D(idx, time, y, x)
         else:
-            return self.interpolator2D(idx).ev(y, x)
+#            print self.bilinear(idx, x, y)
+#            print self.interpolator2D(idx).ev(y, x)
+#            return self.interpolator(idx).ev(y, x)
+            return self.bilinear(idx, x, y)
 
     def ccode_subscript(self, t, x, y):
         ccode = "temporal_interpolation_linear(%s, %s, %s, %s, %s, %s)" \
