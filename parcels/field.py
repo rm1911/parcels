@@ -127,10 +127,15 @@ class Field(object):
 
     @cachedmethod(operator.attrgetter('interpolator_cache'))
     def bilinear(self, t_idx, x, y):
-        xi = np.where(x >= self.lon)[0][-1]
-        yi = np.where(y >= self.lat)[0][-1]
+        try:
+            xi = np.where(x >= self.lon)[0][-1]
+            yi = np.where(y >= self.lat)[0][-1]
+        except IndexError:  # This check currently handles out of bounds
+            print self.lon[0], x, self.lon[-1], self.lat[0], y, self.lat[-1]
+            raise IndexError('(Old) Particle beached at (%f, %f).' % (x, y))
+        if np.isnan(self.data[t_idx, yi, xi]): # This should be the only beaching check needed (except when going OOB apparently)
+            raise IndexError('(New) Particle beached at (%f, %f).' % (x, y))
 
-        #if statements
         if self.name == 'U':
             if np.isnan(self.data[t_idx, yi, xi-1]):
                 sw = nw = 0
@@ -167,8 +172,9 @@ class Field(object):
             se = self.data[t_idx, yi, xi+1] if not np.isnan(self.data[t_idx, yi, xi+1]) else 0
             ne = self.data[t_idx, yi+1, xi+1] if not np.isnan(self.data[t_idx, yi+1, xi+1]) else 0
 
-        if not (self.lon[xi] <= x <= self.lon[xi+1] and self.lat[yi] <= y <= self.lat[yi+1]):
-            print 'error'
+        if not (self.lon[xi] <= np.float32(x) <= self.lon[xi+1] and self.lat[yi] <= np.float32(y) <= self.lat[yi+1]):   # Old?
+            print 'error?'
+
         return (sw * (self.lon[xi+1] - x) * (self.lat[yi+1] - y) +\
             se * (x - self.lon[xi]) * (self.lat[yi+1] - y) +\
             nw * (self.lon[xi+1] - x) * (y - self.lat[yi]) +\
