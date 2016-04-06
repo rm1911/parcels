@@ -193,8 +193,10 @@ class Field(object):
             f0 = self.data[idx-1, :]
             f1 = self.data[idx, :]
         else:
-            f0 = self.interpolator2D(idx-1).ev(y, x)
-            f1 = self.interpolator2D(idx).ev(y, x)
+            f0 = self.bilinear(idx-1, x, y)
+            f1 = self.bilinear(idx, x, y)
+#            f0 = self.interpolator2D(idx-1).ev(y, x)
+#            f1 = self.interpolator2D(idx).ev(y, x)
             t0 = self.time[idx-1]
             t1 = self.time[idx]
         return f0 + (f1 - f0) * ((time - t0) / (t1 - t0))
@@ -213,7 +215,6 @@ class Field(object):
         idx = self.time_index(time)
         if idx > 0:
             return self.interpolator1D(idx, time, y, x)
-            return f0 + (f1 - f0) * ((time - t0) / (t1 - t0))
         else:
 #            print self.bilinear(idx, x, y)
 #            print self.interpolator2D(idx).ev(y, x)
