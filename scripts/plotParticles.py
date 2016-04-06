@@ -18,11 +18,11 @@ def particleplotting(filename, tracerfile, recordedvar, mode):
         record = pfile.variables[recordedvar]
 
     if tracerfile != 'none':
-        tfile = Dataset(tracerfile, 'r')
-        X = tfile.variables['x']
-        Y = tfile.variables['y']
-        P = tfile.variables['P']
-        plt.contourf(np.squeeze(X), np.squeeze(Y), np.squeeze(P))
+      tfile = Dataset(tracerfile,'r')
+      X = tfile.variables['x']
+      Y = tfile.variables['y']
+      P = tfile.variables['vozocrtx']
+      plt.contourf(np.squeeze(X),np.squeeze(Y),np.squeeze(P))
 
     if mode == '3d':
         fig = plt.figure(1)
