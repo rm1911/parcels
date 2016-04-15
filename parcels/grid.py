@@ -81,7 +81,7 @@ class Grid(object):
         return cls(u, v, u.depth, u.time, fields=fields)
 
     @classmethod
-    def from_nemo(cls, basename, uvar='vozocrtx', vvar='vomecrty',
+    def from_nemo(cls, basename, uvar='uo', vvar='vo',
                   extra_vars={}, **kwargs):
         """Initialises grid data from files using NEMO conventions.
 
@@ -94,7 +94,7 @@ class Grid(object):
         filenames = dict([(v, str(path.local("%s%s.nc" % (basename, v))))
                           for v in extra_vars.keys()])
         return cls.from_netcdf(filenames, variables=extra_vars,
-                               dimensions=dimensions, **kwargs)
+                               dimensions=dimensions, nemo=True, **kwargs)
 
     def add_field(self, field):
         self.fields.update({field.name: field})
