@@ -110,9 +110,6 @@ class Field(object):
             ((self.lon[xi+1] - self.lon[xi]) * (self.lat[yi+1] - self.lat[yi]))
 
     @cachedmethod(operator.attrgetter('interpolator_cache'))
-    def interpolator2D(self, t_idx):
-        return RectBivariateSpline(self.lat, self.lon,
-                                   self.data[t_idx, :])
 
     def interpolator1D(self, idx, time, y, x):
         # Return linearly interpolated field value:
@@ -124,8 +121,6 @@ class Field(object):
         else:
             f0 = self.bilinear(idx-1, x, y)
             f1 = self.bilinear(idx, x, y)
-#            f0 = self.interpolator2D(idx-1).ev(y, x)
-#            f1 = self.interpolator2D(idx).ev(y, x)
             t0 = self.time[idx-1]
             t1 = self.time[idx]
         return f0 + (f1 - f0) * ((time - t0) / (t1 - t0))
@@ -145,9 +140,6 @@ class Field(object):
         if idx > 0:
             return self.interpolator1D(idx, time, y, x)
         else:
-#            print self.bilinear(idx, x, y)
-#            print self.interpolator2D(idx).ev(y, x)
-#            return self.interpolator(idx).ev(y, x)
             return self.bilinear(idx, x, y)
 
     def ccode_subscript(self, t, x, y):
