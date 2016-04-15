@@ -92,7 +92,7 @@ class Field(object):
         self.time_index_cache = LRUCache(maxsize=2)
 
     @classmethod
-    def from_netcdf(cls, name, dimensions, datasets, **kwargs):
+    def from_netcdf(cls, name, dimensions, datasets, nemo=False, **kwargs):
         """Create field from netCDF file using NEMO conventions
 
         :param name: Name of the field to create
@@ -120,6 +120,12 @@ class Field(object):
         for tslice, dset in zip(timeslices, datasets):
             data[tidx:, 0, :, :] = dset[dimensions['data']][:, 0, :, :]
             tidx += tslice.size
+        # If reading from nemo file the U and V field positions need to be adjusted
+        if nemo:
+            if name == 'U':
+                lon += np.diff(lon)[range(len(lon) - 1) + [len(lon) - 2]] / 2
+            elif name == 'V':
+                lat += np.diff(lat)[range(len(lat) - 1) + [len(lat) - 2]] / 2
         return cls(name, data, lon, lat, depth=depth, time=time, **kwargs)
 
     def __getitem__(self, key):
