@@ -98,10 +98,22 @@ class Field(object):
 
     @cachedmethod(operator.attrgetter('interpolator_cache'))
     def bilinear(self, t_idx, x, y):
+        # More helpful error message for out of bounds, but only if x (y) is
+        # less than all lon (lat)
         try:
             xi = np.where(x >= self.lon)[0][-1]
             yi = np.where(y >= self.lat)[0][-1]
+        except IndexError:
+            raise IndexError('Particle out of bounds at (%f, %f).' % (x, y))
 
+        # Get cell corner values. If particles get out of bounds 0 is returned
+        try:
+            if self.name == 'V':
+                (sw, se, nw, ne) = self.corners(t_idx, x, y, xi, yi)
+            else:
+                (sw, nw, se, ne) = self.corners(t_idx, x, y, xi, yi)
+        except IndexError:
+            return 0
 
         return (sw * (self.lon[xi+1] - x) * (self.lat[yi+1] - y) +\
             se * (x - self.lon[xi]) * (self.lat[yi+1] - y) +\
@@ -110,6 +122,82 @@ class Field(object):
             ((self.lon[xi+1] - self.lon[xi]) * (self.lat[yi+1] - self.lat[yi]))
 
     @cachedmethod(operator.attrgetter('interpolator_cache'))
+    def corners(self, t_idx, x, y, xi, yi):
+        # Variable names are based on U-field
+        sw = self.data[t_idx, yi, xi]
+        nw = self.data[t_idx, yi+1, xi]
+        se = self.data[t_idx, yi, xi+1]
+        ne = self.data[t_idx, yi+1, xi+1]
+        if self.name == 'V':
+            nw, se = se, nw
+
+        repel = 1.01        # Scaling to make velocties away from the beach slightly bigger than toward
+        big_repel = 1.50    # Scaling to push "beached" particles back into sea faster
+
+        if not any(np.isnan([sw, nw, se, ne])):
+            return (sw, nw, se, ne)
+
+        if self.name == 'U' or self.name == 'V':
+            if all(np.isnan([sw, nw, se, ne])):
+                # Particle is "beached", needs to be unbeached
+                if self.name == 'U':
+                    wsw = self.data[t_idx, yi, xi-1]
+                    wnw = self.data[t_idx, yi+1, xi-1]
+                    ese = self.data[t_idx, yi, xi+2]
+                    ene = self.data[t_idx, yi+1, xi+2]
+                if self.name == 'V':
+                    wsw = self.data[t_idx, yi-1, xi]
+                    wnw = self.data[t_idx, yi-1, xi+1]
+                    ese = self.data[t_idx, yi+2, xi]
+                    ene = self.data[t_idx, yi+2, xi+1]
+
+                if (x - self.lon[xi] < self.lon[xi+1] - x and self.name == 'U')\
+                    or (y - self.lat[yi] < self.lat[yi+1] - y and self.name == 'V'):
+                    sw = se = -abs(wsw) * big_repel if not np.isnan(wsw) else\
+                        -abs(wnw) * big_repel
+                    nw = ne = -abs(wnw) * big_repel if not np.isnan(wnw) else\
+                        -abs(wsw) * big_repel
+                else:
+                    sw = se = abs(ese) * big_repel if not np.isnan(ese) else\
+                        abs(ene) * big_repel
+                    nw = ne = abs(ene) * big_repel if not np.isnan(ene) else\
+                        abs(ese) * big_repel
+                return (sw, nw, se, ne)
+
+            # Mirroring u (v) on west (south) edge
+            if np.isnan(sw):                # sw
+                if np.isnan(nw):            # sw, nw
+                    if np.isnan(se):        # sw, nw, se
+                        sw = nw = abs(ne) * repel
+                        se = ne
+                    elif np.isnan(ne):      # sw, nw, -se, ne
+                        sw = nw = abs(se) * repel
+                        ne = se
+                    else:                   # sw, nw, -se, -ne
+                        sw = abs(se) * repel
+                        nw = abs(ne) * repel
+                    return (sw, nw, se, ne)
+                else:                       # sw, -nw
+                    sw = nw
+            elif np.isnan(nw):              # -sw, nw
+                nw = sw
+            # Mirroring u (v) on east (north) edge
+            if np.isnan(se):                # se
+                if np.isnan(ne):            # se, ne
+                    se = -abs(sw) * repel
+                    ne = -abs(nw) * repel
+                else:                       # se, -ne
+                    se = ne
+            elif np.isnan(ne):              # -se, ne
+                ne = se
+
+        else:   # What do?
+            sw = self.data[t_idx, yi, xi]
+            nw = self.data[t_idx, yi+1, xi] if not np.isnan(self.data[t_idx, yi+1, xi]) else 0
+            se = self.data[t_idx, yi, xi+1] if not np.isnan(self.data[t_idx, yi, xi+1]) else 0
+            ne = self.data[t_idx, yi+1, xi+1] if not np.isnan(self.data[t_idx, yi+1, xi+1]) else 0
+
+        return (sw, nw, se, ne)
 
     def interpolator1D(self, idx, time, y, x):
         # Return linearly interpolated field value:
