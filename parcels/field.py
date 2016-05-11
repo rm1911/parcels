@@ -106,7 +106,7 @@ class Field(object):
         except IndexError:
             raise IndexError('Particle out of bounds at (%f, %f).' % (x, y))
 
-        # Get cell corner values. If particles get out of bounds 0 is returned
+        # Get cell corner values. If particle gets out of bounds 0 is returned
         try:
             if self.name == 'V':
                 (sw, se, nw, ne) = self.corners(t_idx, x, y, xi, yi)
@@ -192,10 +192,10 @@ class Field(object):
                 ne = se
 
         else:   # What do?
-            sw = self.data[t_idx, yi, xi]
-            nw = self.data[t_idx, yi+1, xi] if not np.isnan(self.data[t_idx, yi+1, xi]) else 0
-            se = self.data[t_idx, yi, xi+1] if not np.isnan(self.data[t_idx, yi, xi+1]) else 0
-            ne = self.data[t_idx, yi+1, xi+1] if not np.isnan(self.data[t_idx, yi+1, xi+1]) else 0
+            if np.isnan(sw): sw = 0
+            if np.isnan(nw): nw = 0
+            if np.isnan(se): se = 0
+            if np.isnan(ne): ne = 0
 
         return (sw, nw, se, ne)
 
