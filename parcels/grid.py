@@ -69,7 +69,7 @@ class Grid(object):
         for var, name in variables.items():
             # Resolve all matching paths for the current variable
             basepath = path.local(filenames[var])
-            paths = [path.local(fp) for fp in glob(str(basepath))]
+            paths = [path.local(fp) for fp in sorted(glob(str(basepath)))]
             for fp in paths:
                 if not fp.exists():
                     raise IOError("Grid file not found: %s" % str(fp))
