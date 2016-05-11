@@ -18,14 +18,27 @@ def particleplotting(filename, tracerfile, recordedvar, mode):
         record = pfile.variables[recordedvar]
 
     if tracerfile != 'none':
-      tfile = Dataset(tracerfile,'r')
-      X = tfile.variables['x']
-      Y = tfile.variables['y']
-      try:
-          P = tfile.variables['vomecrty']
-      except KeyError:
-          P = tfile.variables['vozocrtx']
-      plt.contourf(np.squeeze(X),np.squeeze(Y),np.squeeze(P))
+        tfile = Dataset(tracerfile,'r')
+        try:
+            X = tfile.variables['x']
+            Y = tfile.variables['y']
+        except KeyError:
+            X = tfile.variables['nav_lon']
+            Y = tfile.variables['nav_lat']
+        try:
+            P = tfile.variables['vomecrty']
+        except KeyError:
+            try:
+                P = tfile.variables['vozocrtx']
+            except KeyError:
+                try:
+                    P = tfile.variables['uo'][0, 0, :, :]
+                    X += (X[1] - X[0]) / 2
+                except KeyError:
+                    P = tfile.variables['vo'][0, 0, :, :]
+                    Y += (Y[1] - Y[0]) / 2
+        plt.figure()
+        plt.contourf(np.squeeze(X),np.squeeze(Y),np.squeeze(P))
 
     if mode == '3d':
         fig = plt.figure(1)
@@ -39,6 +52,28 @@ def particleplotting(filename, tracerfile, recordedvar, mode):
         plt.plot(np.transpose(lon), np.transpose(lat), '.-')
         plt.xlabel('Longitude')
         plt.ylabel('Latitude')
+
+        # Quiver around landing site
+#        if 1:
+#            from parcels import Grid
+#            basename = 'Agulhas/*'
+#            grid = Grid.from_nemo(basename, vmax=1e4)
+##            xi = np.where(33.68 > grid.V.lon)[0][-1] - 5
+##            yi = np.where(-25.07 > grid.U.lat)[0][-1] - 5
+#            xi = np.where(26.4 > grid.V.lon)[0][-1] - 20
+#            yi = np.where(-33.7 > grid.U.lat)[0][-1] - 5
+#            lonU = grid.U.lon[xi:xi+30]
+#            latU = grid.U.lat[yi:yi+10]
+#            lonV = grid.V.lon[xi:xi+30]
+#            latV = grid.V.lat[yi:yi+10]
+#            u = grid.U.data[0, yi:yi+10, xi:xi+30]
+#            v = grid.V.data[0, yi:yi+10, xi:xi+30]
+#            u[np.isnan(u)] = 0.
+#            v[np.isnan(v)] = 0.
+#            plt.quiver(lonU, latU, u, np.zeros(np.shape(v)))
+#            plt.quiver(lonV, latV, np.zeros(np.shape(u)), v)
+##            print '[%d, %d] = [%f, %f]' % (xi, yi, grid.V.lon[xi], grid.U.lat[yi])
+
     elif mode == 'movie2d':
 
         fig = plt.figure(1)
