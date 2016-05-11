@@ -18,7 +18,7 @@ class GridNode(IntrinsicNode):
 
 class FieldNode(IntrinsicNode):
     def __getitem__(self, attr):
-        return IntrinsicNode(None, ccode=self.obj.ccode_subscript(*attr))
+        return IntrinsicNode(None, ccode=self.obj.ccode_subscript(*attr)[:-1] + ', \'' + self.obj.ccode_subscript(*attr)[-2] + '\')')
 
 
 class MathNode(IntrinsicNode):
