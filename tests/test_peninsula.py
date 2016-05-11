@@ -121,7 +121,7 @@ def pensinsula_example(grid, npart, mode='jit', degree=1,
     k_adv = pset.Kernel(method)
     k_p = pset.Kernel(UpdateP)
     pset.execute(k_adv + k_p, timesteps=int(time / dt), dt=dt,
-                 output_file=out, output_steps=1)
+                 output_file=out, output_steps=substeps)
 
     if verbose:
         print("Final particle positions:\n%s" % pset)
@@ -154,7 +154,8 @@ def gridfile():
 @pytest.mark.parametrize('mode', ['scipy', 'jit'])
 def test_peninsula_file(gridfile, mode):
     """Open grid files and execute"""
-    grid = Grid.from_nemo(gridfile, extra_vars={'P': 'P'})
+    grid = Grid.from_nemo(gridfile, uvar='vozocrtx', vvar='vomecrty',
+                          extra_vars={'P': 'P'})
     pset = pensinsula_example(grid, 100, mode=mode, degree=1)
     # Test advection accuracy by comparing streamline values
     err_adv = np.array([abs(p.p_start - p.p) for p in pset])
@@ -191,7 +192,8 @@ Example of particle advection around an idealised peninsula""")
         grid.write(filename)
 
     # Open grid file set
-    grid = Grid.from_nemo('peninsula', extra_vars={'P': 'P'})
+    grid = Grid.from_nemo('peninsula', uvar='vozocrtx', vvar='vomecrty',
+                          extra_vars={'P': 'P'})
 
     if args.profiling:
         from cProfile import runctx
