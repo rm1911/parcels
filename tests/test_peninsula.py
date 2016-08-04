@@ -163,6 +163,18 @@ def test_peninsula_file(gridfile, mode):
     assert(err_smpl <= 1.e-3).all()
 
 
+# Special test to check whether scipy RK45 works with kernel ops
+def test_peninsula_scipyRK45_kernelOps():
+    grid = peninsula_grid(100, 50)
+    pset = pensinsula_example(grid, 100, mode='scipy', method=AdvectionRK45, degree=1)
+    # Test advection accuracy by comparing streamline values
+    err_adv = np.array([abs(p.p_start - p.p) for p in pset])
+    assert(err_adv <= 1.e-3).all()
+    # Test grid sampling accuracy by comparing kernel against grid sampling
+    err_smpl = np.array([abs(p.p - pset.grid.P[0., p.lon, p.lat]) for p in pset])
+    assert(err_smpl <= 1.e-3).all()
+
+
 if __name__ == "__main__":
     p = ArgumentParser(description="""
 Example of particle advection around an idealised peninsula""")
