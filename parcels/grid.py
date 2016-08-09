@@ -3,7 +3,7 @@ from parcels.particleset import ParticleSet
 import numpy as np
 from py import path
 from glob import glob
-from collections import defaultdict
+from collections import defaultdict, Iterable
 
 
 __all__ = ['Grid']
@@ -139,10 +139,17 @@ class Grid(object):
     def ParticleSet(self, *args, **kwargs):
         return ParticleSet(*args, grid=self, **kwargs)
 
-    def eval(self, x, y):
-        u = self.U.eval(x, y)
-        v = self.V.eval(x, y)
-        return u, v
+    def __getitem__(self, keys):
+        t = keys[0]
+        # Flatten nested tuples for spatial coordinates
+        coords = keys[1] if isinstance(keys[1], Iterable) else keys[1:]
+        return self.eval(t, *coords)
+
+    def eval(self, t, x, y):
+        """Evaluates grid velocity for a given time and space location."""
+        u = self.U.eval(t, x, y)
+        v = self.V.eval(t, x, y)
+        return np.array([u, v])
 
     def write(self, filename):
         """Write flow field to NetCDF file using NEMO convention
