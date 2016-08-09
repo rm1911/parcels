@@ -6,24 +6,20 @@ import math
 __all__ = ['AdvectionRK4', 'AdvectionEE', 'AdvectionRK45']
 
 
-def AdvectionRK4(particle, grid, time, dt):
-    u1 = grid.U[time, particle.lon, particle.lat]
-    v1 = grid.V[time, particle.lon, particle.lat]
-    lon1, lat1 = (particle.lon + u1*.5*dt, particle.lat + v1*.5*dt)
-    u2, v2 = (grid.U[time + .5 * dt, lon1, lat1], grid.V[time + .5 * dt, lon1, lat1])
-    lon2, lat2 = (particle.lon + u2*.5*dt, particle.lat + v2*.5*dt)
-    u3, v3 = (grid.U[time + .5 * dt, lon2, lat2], grid.V[time + .5 * dt, lon2, lat2])
-    lon3, lat3 = (particle.lon + u3*dt, particle.lat + v3*dt)
-    u4, v4 = (grid.U[time + dt, lon3, lat3], grid.V[time + dt, lon3, lat3])
-    particle.lon += (u1 + 2*u2 + 2*u3 + u4) / 6. * dt
-    particle.lat += (v1 + 2*v2 + 2*v3 + v4) / 6. * dt
-
-
 def AdvectionEE(particle, grid, time, dt):
-    u1 = grid.U[time, particle.lon, particle.lat]
-    v1 = grid.V[time, particle.lon, particle.lat]
-    particle.lon += u1 * dt
-    particle.lat += v1 * dt
+    velocity = grid[time, particle.pos]
+    particle.pos += velocity * dt
+
+
+def AdvectionRK4(particle, grid, time, dt):
+    vel1 = grid[time, particle.pos]
+    pos1 = particle.pos + vel1 * 0.5 * dt
+    vel2 = grid[time + .5 * dt, pos1]
+    pos2 = particle.pos + vel2 * 0.5 * dt
+    vel3 = grid[time + .5 * dt, pos2]
+    pos3 = particle.pos + vel3 * dt
+    vel4 = grid[time + dt, pos3]
+    particle.pos += (vel1 + 2*vel2 + 2*vel3 + vel4) / 6. * dt
 
 
 def AdvectionRK45(particle, grid, time, dt):

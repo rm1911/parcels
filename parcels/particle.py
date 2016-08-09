@@ -60,8 +60,9 @@ class Particle(object):
     user_vars = OrderedDict()
 
     def __init__(self, lon, lat, grid, dt=3600., time=0., cptr=None):
-        self.lon = lon
-        self.lat = lat
+        self.pos = np.array([lon, lat])
+        self.lon = self.pos[0:1]
+        self.lat = self.pos[1:2]
         self.time = time
         self.dt = dt
 
