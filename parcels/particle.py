@@ -56,6 +56,13 @@ class ParticleType(object):
         if self.itemsize % 8 > 0:
             # Add padding to be 64-bit aligned
             self.variables += [Variable('pad', dtype=np.float32)]
+        # Build variable and alias map
+        self._variable_map = {}
+        self._alias_map = {}
+        for v in self.variables:
+            self._variable_map[v.name] = v
+            if v.alias:
+                self._alias_map.update([(a, (v.name, i)) for i, a in enumerate(v.alias)])
 
     def __repr__(self):
         return "PType<%s>::%s" % (self.name, self.variables)
@@ -73,6 +80,16 @@ class ParticleType(object):
     def itemsize(self):
         """Size of the underlying particle struct in bytes"""
         return sum([v.itemsize for v in self.variables])
+
+    @property
+    def variable_map(self):
+        """Alias map for particle variables of the form: alias -> (var, idx)"""
+        return self._variable_map
+
+    @property
+    def alias_map(self):
+        """Alias map for particle variables of the form: alias -> (var, idx)"""
+        return self._alias_map
 
 
 class Particle(object):
@@ -131,20 +148,26 @@ class JITParticle(Particle):
 
     def __init__(self, *args, **kwargs):
         self._cptr = kwargs.pop('cptr', None)
+        ptype = super(JITParticle, self).getPType()
+        # Set up alias map
+        self._alias_map = ptype.alias_map
         if self._cptr is None:
             # Allocate data for a single particle
-            ptype = super(JITParticle, self).getPType()
             self._cptr = np.empty(1, dtype=ptype.dtype)[0]
         super(JITParticle, self).__init__(*args, **kwargs)
 
     def __getattr__(self, attr):
-        if attr == "_cptr":
+        if attr in ["_cptr", "_alias_map"]:
+            return super(JITParticle, self).__getattr__(attr)
+        elif attr in self._alias_map:
             return super(JITParticle, self).__getattr__(attr)
         else:
             return self._cptr.__getitem__(attr)
 
     def __setattr__(self, key, value):
-        if key == "_cptr":
+        if key in ["_cptr", "_alias_map"]:
+            super(JITParticle, self).__setattr__(key, value)
+        elif key in self._alias_map:
             super(JITParticle, self).__setattr__(key, value)
         else:
             self._cptr.__setitem__(key, value)
