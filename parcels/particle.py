@@ -105,8 +105,6 @@ class Particle(object):
 
     def __init__(self, lon, lat, grid, dt=3600., time=0., cptr=None):
         self.pos = np.array([lon, lat])
-        self.lon = self.pos[0:1]
-        self.lat = self.pos[1:2]
         self.time = time
         self.dt = dt
 
@@ -116,6 +114,22 @@ class Particle(object):
 
         for var in self.user_vars:
             setattr(self, var, 0)
+
+    @property
+    def lon(self):
+        return self.pos[0]
+
+    @lon.setter
+    def lon(self, value):
+        self.pos[0] = value
+
+    @property
+    def lat(self):
+        return self.pos[1]
+
+    @lat.setter
+    def lat(self, value):
+        self.pos[1] = value
 
     def __repr__(self):
         return "P(%f, %f, %f)[%d, %d]" % (self.lon, self.lat, self.time,
