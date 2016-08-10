@@ -2,7 +2,36 @@ from collections import OrderedDict
 import numpy as np
 
 
-__all__ = ['Particle', 'JITParticle']
+__all__ = ['Particle', 'JITParticle', 'Variable']
+
+
+class Variable(object):
+    """Class encapsulating the type informationof a particular particle variable
+
+    :param name: Name of the variable
+    :param dtype: Data type of the variable
+    :param size: Size of array variables
+    :param alias: Allowed aliases for use in kernels. Can be a single
+                  alternative name, or a list for array variables.
+    """
+    def __init__(self, name, dtype=np.float32, size=1, alias=None):
+        self.name = name
+        self.dtype = dtype
+        self.size = size
+        self.alias = alias
+        if self.alias is not None:
+            assert(isinstance(self.alias, list))
+            assert(len(self.alias) == self.size)
+
+    def __repr__(self):
+        return "PVar<%s|%s%s%s>" % (self.name, self.dtype,
+                                    "(%s)" % self.size if self.size > 1 else "",
+                                    "::%s" % self.alias if self.alias else "")
+
+    @property
+    def itemsize(self):
+        """Data type size in bytes"""
+        return self.size * 8 if self.dtype == np.float64 else 4
 
 
 class ParticleType(object):
@@ -19,34 +48,31 @@ class ParticleType(object):
 
         self.name = pclass.__name__
         self.uses_jit = issubclass(pclass, JITParticle)
-        self.var_types = None
-        if self.uses_jit:
-            self.var_types = pclass.base_vars.copy()
-            self.var_types.update(pclass.user_vars)
-
-        self.user_vars = pclass.user_vars
+        # Ensure users variables are all of type Variable
+        if isinstance(pclass.user_vars, dict):
+            pclass.user_vars = [Variable(name, dtype=dtype)
+                                for name, dtype in pclass.user_vars.items()]
+        self.variables = pclass.base_vars + pclass.user_vars
+        if self.itemsize % 8 > 0:
+            # Add padding to be 64-bit aligned
+            self.variables += [Variable('pad', dtype=np.float32)]
 
     def __repr__(self):
-        return "PType<%s>::%s" % (self.name, str(self.var_types))
+        return "PType<%s>::%s" % (self.name, self.variables)
 
     @property
     def _cache_key(self):
-        return"-".join(["%s:%s" % v for v in self.var_types.items()])
+        return"-".join(["%s" % v for v in self.variables])
 
     @property
     def dtype(self):
         """Numpy.dtype object that defines the C struct"""
-        type_list = list(self.var_types.items())
-        if self.size % 8 > 0:
-            # Add padding to be 64-bit aligned
-            type_list += [('pad', np.float32)]
-        return np.dtype(type_list)
+        return np.dtype([(v.name, (v.dtype, v.size)) for v in self.variables])
 
     @property
-    def size(self):
+    def itemsize(self):
         """Size of the underlying particle struct in bytes"""
-        return sum([8 if vt == np.float64 else 4
-                    for vt in self.var_types.values()])
+        return sum([v.itemsize for v in self.variables])
 
 
 class Particle(object):
@@ -57,7 +83,8 @@ class Particle(object):
     :param grid: :Class Grid: object to track this particle on
     :param user_vars: Dictionary of any user variables that might be defined in subclasses
     """
-    user_vars = OrderedDict()
+    base_vars = []
+    user_vars = []
 
     def __init__(self, lon, lat, grid, dt=3600., time=0., cptr=None):
         self.pos = np.array([lon, lat])
@@ -95,11 +122,12 @@ class JITParticle(Particle):
     :param user_vars: Class variable that defines additional particle variables
     """
 
-    base_vars = OrderedDict([('lon', np.float32), ('lat', np.float32),
-                             ('time', np.float64), ('dt', np.float32),
-                             ('xi', np.int32), ('yi', np.int32),
-                             ('active', np.int32)])
-    user_vars = OrderedDict()
+    base_vars = [Variable('pos', dtype=np.float32, size=2, alias=['lon', 'lat']),
+                 Variable('idx', np.int32, size=2, alias=['xi', 'yi']),
+                 Variable('time', np.float64), Variable('dt', np.float32),
+                 Variable('active', np.int32)]
+    user_vars = []
+
 
     def __init__(self, *args, **kwargs):
         self._cptr = kwargs.pop('cptr', None)
