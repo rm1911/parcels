@@ -3,6 +3,9 @@ import numpy as np
 from datetime import timedelta as delta
 import math
 from parcels import random as parcels_random
+import pytest
+
+ptype = {'scipy': ScipyParticle, 'jit': JITParticle}
 
 
 def two_dim_brownian_flat(particle, grid, time, dt):
@@ -26,14 +29,14 @@ def brownian_grid(xdim=200, ydim=200):     # Define a flat grid of zeros, for si
     return Grid.from_data(U, lon, lat, V, lon, lat, depth, time, mesh='flat')
 
 
-def test_brownian_example(npart=3000):
+@pytest.mark.parametrize('mode', ['scipy', 'jit'])
+def test_brownian_example(mode, npart=3000):
 
     grid = brownian_grid()
     grid.K_lat = 100                  # Set diffusion constants.
     grid.K_lon = 100
-    ParticleClass = ScipyParticle     # Restrict to scipy mode for development.
     ptcls_start = 300000.             # Start all particles at same location in middle of grid.
-    pset = grid.ParticleSet(size=npart, pclass=ParticleClass,
+    pset = grid.ParticleSet(size=npart, pclass=ptype[mode],
                             start=(ptcls_start, ptcls_start),
                             finish=(ptcls_start, ptcls_start))
 
@@ -59,4 +62,4 @@ def test_brownian_example(npart=3000):
 
 
 if __name__ == "__main__":
-    test_brownian_example(npart=2000)
+    test_brownian_example('scipy', npart=2000)
