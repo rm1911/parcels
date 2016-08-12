@@ -38,7 +38,8 @@ class MathNode(IntrinsicNode):
 class RandomNode(IntrinsicNode):
     symbol_map = {'random': 'parcels_random',
                   'uniform': 'parcels_uniform',
-                  'randint': 'parcels_randint'}
+                  'randint': 'parcels_randint',
+                  'normal': 'parcels_normal'}
 
     def __getattr__(self, attr):
         if hasattr(random, attr):

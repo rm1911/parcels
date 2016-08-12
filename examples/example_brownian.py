@@ -1,16 +1,16 @@
-from parcels import Grid, ScipyParticle
+from parcels import Grid, ScipyParticle, JITParticle
 import numpy as np
 from datetime import timedelta as delta
 import math
-import random
+from parcels import random as parcels_random
 
 
 def two_dim_brownian_flat(particle, grid, time, dt):
 
     # random.seed() - should a seed be included for reproducibility/testing purposes?
     # Use equation for particle diffusion.
-    particle.lat += random.normalvariate(0, 1)*math.sqrt(2*dt*grid.K_lat)
-    particle.lon += random.normalvariate(0, 1)*math.sqrt(2*dt*grid.K_lon)
+    particle.lat += parcels_random.normal(0, 1)*math.sqrt(2*dt*grid.K_lat)
+    particle.lon += parcels_random.normal(0, 1)*math.sqrt(2*dt*grid.K_lon)
 
 
 def brownian_grid(xdim=200, ydim=200):     # Define a flat grid of zeros, for simplicity.

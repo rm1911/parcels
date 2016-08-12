@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+
+#define PI 3.141592654
 
 typedef enum
   {
@@ -90,4 +93,9 @@ static inline float parcels_uniform(float low, float high)
 static inline int parcels_randint(int low, int high)
 {
   return (rand() % (high-low)) + low;
+}
+
+static inline float parcels_normal(float loc, float scale)
+{
+  return sqrt(-2. * log((float)rand())) * cos(2.*PI*(float)rand());
 }
