@@ -85,6 +85,7 @@ def randint(low, high):
     rnd.restype = c_int
     return rnd(c_int(low), c_int(high))
 
+
 def normal(loc, scale):
     """Returns a random float on normal distribution with mean `loc` and width `scale`"""
     rnd = parcels_random.lib.pcls_normal
