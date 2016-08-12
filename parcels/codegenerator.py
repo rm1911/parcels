@@ -2,7 +2,7 @@ import ast
 import cgen as c
 from collections import OrderedDict
 import math
-import random
+# import random
 
 
 class IntrinsicNode(ast.AST):
@@ -42,7 +42,7 @@ class RandomNode(IntrinsicNode):
                   'normal': 'parcels_normal'}
 
     def __getattr__(self, attr):
-        if hasattr(random, attr):
+        if True:  # hasattr(random, attr):  # Breaks example_brownian.py in JIT mode
             if attr in self.symbol_map:
                 attr = self.symbol_map[attr]
             return IntrinsicNode(None, ccode=attr)
