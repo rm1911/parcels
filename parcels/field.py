@@ -17,7 +17,7 @@ except:
     plt = None
 
 
-__all__ = ['CentralDifferences', 'Field', 'Geographic', 'GeographicPolar']
+__all__ = ['CentralDifferences', 'Field', 'Constant', 'Geographic', 'GeographicPolar']
 
 
 def CentralDifferences(field_data, lat, lon):
@@ -93,6 +93,20 @@ class GeographicPolar(UnitConverter):
 
     def ccode_to_target(self, x, y):
         return "(1.0 / (1000. * 1.852 * 60. * cos(%s * M_PI / 180)))" % y
+
+
+class Constant(object):
+    """Class that encapsulates access to field data.
+
+    :param name: Name of the constant
+    :param data: Data of the constant
+    """
+
+    def __init__(self, data):
+        self.data = data
+
+    def __getitem__(self, key):
+        return self.data(*key)
 
 
 class Field(object):

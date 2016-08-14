@@ -1,4 +1,4 @@
-from parcels import Grid, ScipyParticle, JITParticle
+from parcels import Grid, ScipyParticle, JITParticle, Constant
 import numpy as np
 from datetime import timedelta as delta
 import math
@@ -12,8 +12,8 @@ def two_dim_brownian_flat(particle, grid, time, dt):
 
     # random.seed() - should a seed be included for reproducibility/testing purposes?
     # Use equation for particle diffusion.
-    particle.lat += random.normal(0, 1)*math.sqrt(2*dt*100)
-    particle.lon += random.normal(0, 1)*math.sqrt(2*dt*100)
+    particle.lat += random.normal(0, 1)*math.sqrt(2*dt*grid.K_lat.data)
+    particle.lon += random.normal(0, 1)*math.sqrt(2*dt*grid.K_lon.data)
 
 
 def brownian_grid(xdim=200, ydim=200):     # Define a flat grid of zeros, for simplicity.
@@ -33,8 +33,8 @@ def brownian_grid(xdim=200, ydim=200):     # Define a flat grid of zeros, for si
 def test_brownian_example(mode, npart=3000):
 
     grid = brownian_grid()
-#     grid.K_lat = 100                  # Set diffusion constants.
-#     grid.K_lon = 100
+    grid.K_lat = Constant(100.)       # Set diffusion constants.
+    grid.K_lon = grid.K_lat
     ptcls_start = 300000.             # Start all particles at same location in middle of grid.
     pset = grid.ParticleSet(size=npart, pclass=ptype[mode],
                             start=(ptcls_start, ptcls_start),
@@ -52,8 +52,8 @@ def test_brownian_example(mode, npart=3000):
 
     lats = np.array([particle.lat for particle in pset.particles])
     lons = np.array([particle.lon for particle in pset.particles])
-    expected_std_lat = np.sqrt(2*100*endtime.total_seconds())
-    expected_std_lon = np.sqrt(2*100*endtime.total_seconds())
+    expected_std_lat = np.sqrt(2*grid.K_lat.data*endtime.total_seconds())
+    expected_std_lon = np.sqrt(2*grid.K_lon.data*endtime.total_seconds())
 
     assert np.allclose(np.std(lats), expected_std_lat, rtol=.1)
     assert np.allclose(np.std(lons), expected_std_lon, rtol=.1)
